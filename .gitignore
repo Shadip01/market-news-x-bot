@@ -2,4 +2,5 @@
 .env
 __pycache__/
 *.pyc
-data/posted_news.db
+data/
+logs/

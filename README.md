@@ -1,27 +1,21 @@
 # Market News X Bot (Legal-First MVP)
 
-This project pulls market-relevant news from public/official RSS feeds, summarizes each item, and posts short attributed updates to X.
+This project pulls market-relevant news from public/official RSS feeds, summarizes each item, posts to X, and can send email digests.
 
 ## What it does
-- Ingests from a **whitelist** of public feeds (Reuters business feed, CNBC markets RSS, SEC, Federal Reserve, Yahoo Finance).
+- Ingests from a whitelist of public feeds (Reuters business feed, CNBC markets RSS, SEC, Federal Reserve, Yahoo Finance).
 - Applies source policy filters (allowlist/denylist) and optional `robots.txt` checks.
 - Extracts probable ticker mentions and named entities from text.
-- Ranks and selects the top fresh items.
-- Summarizes into a concise X-ready post with source attribution.
-- Posts to X as a single post or short thread when text is longer than one post.
+- Keeps only recent stories (last `MAX_NEWS_AGE_HOURS`).
+- Summarizes for X and posts as a single post or short thread.
+- Sends an email digest with headline + 3-4 summary lines + source link.
 - Deduplicates posted URLs in SQLite.
-
-## Legal posture (important)
-- Uses feed metadata and links, not full-content republishing.
-- Adds source attribution and original link.
-- Keeps summaries short and transformative.
-- You are still responsible for checking each source's Terms of Service and API/RSS license before production use.
 
 ## Setup
 
 1. Create and activate a virtual env:
 ```bash
-cd /Users/shadipkhadka/delegate/market-news-x-bot
+cd /Users/shadipkhadka/Desktop/delegate/market-news-x-bot
 python3 -m venv .venv
 source .venv/bin/activate
 ```
@@ -45,13 +39,27 @@ python main.py
 
 The bot runs once immediately, then repeats every `RUN_EVERY_HOURS`.
 
+## Email setup
+Set in `.env`:
+```env
+EMAIL_ENABLED=true
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USE_TLS=true
+SMTP_USERNAME=your_email@gmail.com
+SMTP_PASSWORD=your_app_password
+EMAIL_FROM=your_email@gmail.com
+EMAIL_TO=your_email@gmail.com
+```
+
+Use an app password if your provider requires it (Gmail/Outlook commonly do).
+
 ## Safe test mode
-Set `DRY_RUN=true` in `.env` to print posts instead of sending to X.
+Set `DRY_RUN=true` in `.env` to print X posts and email digest content without sending live.
 
 ## Notes
 - In live mode (`DRY_RUN=false`), X API credentials are required.
 - `data/posted_news.db` tracks posted item IDs to avoid duplicates.
-- Adjust `MAX_POSTS_PER_RUN`, `MAX_THREAD_POSTS`, and `PRIORITY_TICKERS` in `.env`.
-- Use `SOURCE_ALLOWLIST` / `SOURCE_DENYLIST` to control feed sources by name substring.
-- Set `ENFORCE_ROBOTS_TXT=true` to skip URLs disallowed by each domain's robots policy.
-# market-news-x-bot
+- Use `MAX_NEWS_AGE_HOURS` to control how recent stories must be.
+- Use `SOURCE_ALLOWLIST` / `SOURCE_DENYLIST` to control feed sources.
+- Set `ENFORCE_ROBOTS_TXT=true` to skip URLs disallowed by robots rules.

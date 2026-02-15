@@ -15,7 +15,10 @@ def validate_config() -> None:
     if not settings.openai_api_key:
         raise RuntimeError("Missing OPENAI_API_KEY")
 
-    if not settings.dry_run:
+    if not settings.x_enabled and not settings.email_enabled:
+        raise RuntimeError("Both X and email are disabled. Enable at least one output channel.")
+
+    if settings.x_enabled and not settings.dry_run:
         required = {
             "X_API_KEY": settings.x_api_key,
             "X_API_SECRET": settings.x_api_secret,
@@ -25,6 +28,17 @@ def validate_config() -> None:
         missing = [k for k, v in required.items() if not v]
         if missing:
             raise RuntimeError(f"Missing X credentials for live posting: {', '.join(missing)}")
+
+    if settings.email_enabled:
+        required_email = {
+            "SMTP_HOST": settings.smtp_host,
+            "SMTP_PORT": str(settings.smtp_port),
+            "EMAIL_FROM": settings.email_from,
+            "EMAIL_TO": ",".join(settings.email_to),
+        }
+        missing_email = [k for k, v in required_email.items() if not v.strip()]
+        if missing_email:
+            raise RuntimeError(f"Missing email settings: {', '.join(missing_email)}")
 
 
 def main() -> None:
